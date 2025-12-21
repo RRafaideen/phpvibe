@@ -1,5 +1,5 @@
 <?php namespace Main; 
-    include "dependencies.php";
+    include "vendor.php";
 
     use Network\HttpStatus;
     use Network\HttpMethod;

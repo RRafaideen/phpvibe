@@ -1,0 +1,28 @@
+version: "3"
+
+networks:
+  phpvibe-network:
+    driver: bridge
+
+services:
+    phpvibe: 
+        image: php:8.4-fpm-alpine
+        working_dir: /var/www/
+        restart: always
+        volumes:
+            - ./:/var/www
+        networks:
+            - phpvibe-network
+
+    ngnix:
+        image: nginx:alpine
+        restart: always
+        ports: 
+            - "8080:8080"
+        volumes:
+            - ./nginx:/etc/nginx/conf.d
+            - ./:/var/www
+        depends_on:
+            - phpvibe
+        networks :
+            - phpvibe-network

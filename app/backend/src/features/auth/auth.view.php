@@ -1,9 +1,9 @@
 <?php namespace Main\Feature\Auth;
 
-    use function Main\UI\Template;
+    use Main\UI\Template;
 
     class AuthView { 
-        public static function login(?object $data): string {
+        public static function login(?object $data = null): string {
             $buttons = <<<TPL
                 <button type="submit">Connexion</button>
                 <a href="/register">
@@ -16,7 +16,7 @@
             ]);
         }
         
-        public static function register(?object $data): string {
+        public static function register(?object $data = null): string {
             $buttons = <<<TPL
                 <button type="submit">S'enregister</button>
                 <a href="/login">

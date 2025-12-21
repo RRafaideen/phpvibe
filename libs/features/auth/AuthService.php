@@ -1,6 +1,5 @@
 <?php namespace Feature\Auth;
-    include "auth.error.php";
-    include "models/Address.php";
+    include "AuthError.php";
     include "models/User.php";
     include "shared/Password.php";
     include "shared/JWT.php";
@@ -53,6 +52,7 @@
             $this->db->storeUser($user);
         }
 
+        // Todo - move into member 
         public function editProfile(Profile $profile): void {
             $user = $this->getUserById($profile->uid);
             $user->firstname = $profile->firstname;

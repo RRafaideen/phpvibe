@@ -62,7 +62,7 @@
         public JwtHeader $header;
         public object $payload;
 
-        public function __construct($payload = (object) []) {
+        public function __construct(object $payload) {
             $this->header = new JwtHeader();
             $this->payload = $payload;
         } 

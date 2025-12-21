@@ -10,6 +10,8 @@
     include libs("/shared/network/HttpHandler.php");
     include libs("/shared/network/HttpMethod.php");
     include libs("/shared/data/Either.php");
-    include libs("/features/auth/auth.service.php");
-    include "Template.php";
+    include libs("/features/auth/AuthService.php");
+    include "ui/Template.php";
+    include "ui/FormControl.php";
+    include "ui/Message.php";
     include "features/auth/index.php";
