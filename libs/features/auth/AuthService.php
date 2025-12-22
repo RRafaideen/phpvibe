@@ -40,9 +40,9 @@
                 $user->password = "FAKE_HASH"; // <- prevent timming attacks
             }
             if(!Password::verify($user->password, $password)) throw new PasswordOrEmailDoesntMatch();
-            $expire = time() + 60 * 60 * 1; 
-            $accessToken = JWT::sign($expire, (object) [ "uid" => $user->uid, "exp" => $expire ]);
-            return (object) ["access_token" => $accessToken, "expire" => $expire];
+            $expires = time() + 60 * 60 * 1;
+            $accessToken = JWT::sign($expires, (object) [ "uid" => $user->uid, "exp" => $expires ]);
+            return (object) ["access_token" => $accessToken, "expires" => $expires];
         }
         
 

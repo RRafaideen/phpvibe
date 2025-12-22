@@ -15,7 +15,7 @@
         public function get(string $name): ?string {
             foreach (array_keys($this->headers) as $key) {
                 if(preg_match("/^" . strtolower($name) . "$/i", $key))
-                    return $this->headers[$key] = $value;
+                    return $this->headers[$key];
             }
             return null;
         }

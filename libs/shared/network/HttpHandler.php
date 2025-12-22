@@ -1,12 +1,52 @@
 <?php namespace Network;
 
-    use Exception;
     use Data\Either\Either;
     use function Data\Either\{right, left};
 
     class HttpHandler { 
-        public static function run(callable ...$stacks): void { 
-            run(...$stacks);
+        public static function handle(callable ...$stacks) {
+            return new class($stacks) { 
+                private readonly array $stacks;
+                private object $subscriptions;
+
+                public function __construct(array $stacks) {
+                    $this->stacks = $stacks;
+                    $this->subscriptions = (object) ["error" => []];
+                }
+
+                public function onError(callable $callable) { 
+                    $this->subscriptions->error[] = $callable;
+                    return $this;
+                }
+
+                public function start(): void {
+                    $headers = new HttpHeaders(getallheaders());
+                    $method = HttpMethod::fromString($_SERVER["REQUEST_METHOD"]);
+                    $url = parse_url($_SERVER["REQUEST_URI"]);
+                    $cookies = $_COOKIE;
+                    $params = [];
+                    $queryString = [];
+                    parse_str($url["url"] ?? "", $queryString);
+                    
+                    $pathname = $url["path"];
+                    $request = new Request($headers, $method, $pathname, $params, $queryString, $cookies);
+                    $response = new Response();
+                    runStack($this->stacks, $request, $response)
+                        ->fold(
+                            function($err) use ($request, $response) {
+                                $response = null;
+                                foreach ($subscriptions->error as $callable) {
+                                    $result = $callable($err, $request, $response);
+                                    if($result instanceof Response) $response = $result;
+                                }
+                                if($response instanceof Response) return sendResponse($response);
+                                throw $err; // <- not handle
+                            },
+                            fn($res) => sendResponse($res)
+                        );
+                }
+
+            };
         }
     }
 
@@ -14,7 +54,6 @@
         return function(Request $req, Response $res) use ($handlers): RespondType {
             foreach ($handlers as $handler) {
                 $result = $handler($req, $res);
-                // var_dump(get_class($result));
                 if(!($result instanceof RespondType)) $result = new RespondNext();
                 if(!($result instanceof RespondNext)) return $result;
             }
@@ -25,9 +64,11 @@
     function route(HttpMethod $method, string $pattern, callable ...$handlers): callable {
         if(preg_match("/\/$/", $pattern)) $pattern = substr($pattern, 0, strlen($pattern) -1);
         $fragments = explode('/', $pattern);
-
         return function(Request $req, Response $res) use ($method, $pattern, $handlers, $fragments): RespondType {
-            $pathinfo = explode('/', $req->pathname);
+            $pathname = (preg_match("/\/$/", $req->pathname)) 
+                ? substr($req->pathname, 0, strlen($req->pathname) -1)
+                : $req->pathname;
+            $pathinfo = explode('/', $pathname);
             $checkMethod = $method != HttpMethod::ANY && $req->method != $method;
             $checkSize = count($pathinfo) != count($fragments);
             if($checkMethod || $checkSize) return new RespondNext();
@@ -42,27 +83,6 @@
         };
     }
 
-    function run(callable ...$stacks): void {
-        $headers = new HttpHeaders(getallheaders());
-        $method = HttpMethod::fromString($_SERVER["REQUEST_METHOD"]);
-        $url = parse_url($_SERVER["REQUEST_URI"]);
-        $params = [];
-        $queryString = [];
-        parse_str($url["url"] ?? "", $queryString);
-        
-        $pathname = $url["path"];
-        if(preg_match("/\/$/", $pathname)) $pathname = substr($pathname, 0, strlen($pathname) -1);
-
-        $request = new Request($headers, $method, $pathname, $params, $queryString);
-        $response = new Response();
-        runStack($stacks, $request, $response)
-            ->fold(
-                fn($err) => !($err instanceof HttpException) ? throw $err : $err->toResponse(),
-                fn($res) => sendResponse($res)
-            );
-        exit;
-    }
-
     function respond(Response $res): RespondType {
         return new RespondSuccess($res);
     }
@@ -71,24 +91,13 @@
         return new RespondFail($err);
     } 
 
-
-    class HttpException extends Exception {
-        public readonly HttpStatus $status;
-        public function __construct(
-            string $message = "Internal server error",
-            int $statusCode = 500,
-            ?string $statusMessage = null
-        ) {
-            $this->status = new HttpStatus($statusCode, $statusMessage);
-            $this->message = $message;
-        }
-
-        public function toResponse(): Response { 
-            $response = new Response();
-            $response->status = $this->status;
-            $response->body = $this->message;
-        }
-    } 
+    function responseBuilder(HttpStatus $status, HttpHeaders $headers, string $body) {
+        $response = new Response(); 
+        $response->status = $status;
+        $response->headers = $headers;
+        $response->body = $body;
+        return $response;
+    }
 
     /* ---------- Internal ---------- */ 
 
@@ -98,6 +107,7 @@
         public readonly string $pathname;
         public readonly HttpHeaders $headers;
         public readonly HttpMethod $method;
+        public readonly array $cookies;
         public array $params;
         
         public function __construct(
@@ -106,12 +116,14 @@
             string $pathname,
             array $params = [],
             array $queryString = [],
+            array $cookies = [],
         ) { 
             $this->headers = $headers;
             $this->method = $method;
             $this->pathname = $pathname;
             $this->params = $params;
             $this->queryString = $queryString;
+            $this->cookies = $cookies;
             $this->vault = [];
         }
 
@@ -122,17 +134,33 @@
             $body = file_get_contents("php://input");
             return is_string($body) ? $body : null;
         }
+
+        public function json(int $size = 2 * 1024 * 1024) {
+            $contentType = $this->headers->get("Content-Type") ?? "";
+            if(preg_match("/^application\/json/i", $contentType)) return json_decode($this->body($size));
+            throw new HttpHttpException("Content-Type doesn't match", 400);
+        }
+    
+        public function form(int $size = 2 * 1024 * 1024) {
+            $contentType = $this->headers->get("Content-Type") ?? "";
+            $data = [];
+            if(!preg_match("/^application\/x-www-form-urlencoded/i", $contentType)) throw new HttpHttpException("Content-Type doesn't match", 400);
+            parse_str($this->body($size), $data);   
+            return $data;
+        }
     }
 
     class Response { 
         public HttpStatus $status;
         public HttpHeaders $headers;
+        public array $cookies;
         public $body;
         public function __construct(
             HttpStatus $status = new HttpStatus(404),
             HttpHeaders $headers = new HttpHeaders()) { 
             $this->headers = $headers;
             $this->status = $status;
+            $this->cookies = [];
         }
     }
 
@@ -154,6 +182,7 @@
         $protocol = $_SERVER['SERVER_PROTOCOL'];
         header($protocol . " " . $res->status->code . " " .  $res->status->message);
         foreach ($res->headers as $name => $value) header($name . ": " . $value);
+        foreach ($res->cookies as $cookie) header("Set-Cookie: " . Cookie::render($cookie));
         print($res->body);
         exit;
     }
@@ -174,4 +203,5 @@
             });
     }
     
+
     
