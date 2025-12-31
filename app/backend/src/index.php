@@ -1,7 +1,9 @@
 <?php namespace Main; 
     include "vendor.php";
+    include "migrations.php";
 
     use PDO;
+    
     use Network\HttpStatus;
     use Network\HttpMethod;
     use Network\HttpHandler;
@@ -19,12 +21,15 @@
 
     use function Network\{fail, respond, route, stack};
 
-    $pdo = new PDO("sqlite:/database.sqlite");
-    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-	$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+    $pdo = PDOSQLite::open(".database.sqlite");
+    applyMigrations($pdo);
+
+    $db = new SQLDS($pdo);
+    $userRepository = new AuthRepository($db);
+    
 
     /*
-    $db = new SQLite3();
     $authService = new AuthService(new AuthRespository($db), new AuthMailer());
 
 

@@ -7,10 +7,10 @@
 
     class AuthView { 
         public static function login(object $messages = new stdClass()): string {
-            $buttons = <<<TPL
+            $buttons = <<<HTML
                 <button type="submit">Connexion</button>
                 <a href="/register"><button type="button">S'enregistrer</button></a> 
-                TPL;
+                HTML;
             return Template::render((object) [
                 "title" => "Se connecter",
                 "body" => self::authForm("/login", $buttons, $messages)
@@ -18,10 +18,10 @@
         }
         
         public static function register(object $messages = new stdClass()): string {
-            $buttons = <<<TPL
+            $buttons = <<<HTML
                 <button type="submit">S'enregister</button>
                 <a href="/login"><button type="button">Se connecter</button></a> 
-                TPL;
+                HTML;
             return  Template::render((object) [
                 "title" => "S'enregiter",
                 "body" => self::authForm("/register", $buttons, $messages)

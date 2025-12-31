@@ -18,5 +18,6 @@
     include "ui/Message.php";
     include "ui/FormControl.php";
     include "ui/Template.php";
-    include "adapters/SQLite3.php";
+    include "adapters/PDOSQLite.php";
+    include "adapters/Datasource.php";
     include "features/auth/index.php";

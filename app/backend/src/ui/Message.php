@@ -10,21 +10,21 @@
 
         public static function renderInline(Message $message): string { 
             $type = strtoupper($message->type);
-            return <<<TPL
+            return <<<HTML
                 <div class="message-inline message-{$message->type}">
                     <span>{$type}</span><span>{$message->content}</span>
                 </div>
-                TPL;
+                HTML;
         }
         
         public static function renderBox(Message $message): string { 
             $type = strtoupper($message->type);
-            return <<<TPL
+            return <<<HTML
                 <div class="message-box message-{$message->type}">
                     <div>{$type}</div>
                     <div>{$message->content}</div>
                 </div>
-                TPL;
+                HTML;
         }
 
         public MessageType $type;

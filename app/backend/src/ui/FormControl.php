@@ -27,7 +27,7 @@
             $attributes = Html::renderAttributes($control->attributes);
             $messages = array_map(fn($x) => self::renderMessage($x), $control->messages);
             $messages = join("", $messages);
-            return  <<<TPL
+            return  <<<HTML
                     <div class="form-control">
                         <label class="form-control-label">
                            <span>{$control->label}</span>
@@ -35,7 +35,7 @@
                         </label>
                         <div class="form-control-messages">{$messages}</div>
                     </div>
-                TPL;
+                HTML;
 
         }
 

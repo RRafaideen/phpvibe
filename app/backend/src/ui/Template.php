@@ -45,7 +45,7 @@
             $styles = join("", $styles);
             $body = $scheme->body ?? ""; // <- Todo purify
 
-            return <<<TPL
+            return <<<HTML
                 <!DOCTYPE html>
                 <html>
                 <head>
@@ -57,6 +57,6 @@
                 </head>
                 <body>{$body}</body>
                 </html>
-            TPL;
+            HTML;
         }
     }
