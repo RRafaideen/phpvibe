@@ -6,9 +6,9 @@
         case Warn = "warn";
     }
 
-    class Message {
+    class MessageComponent {
 
-        public static function renderInline(Message $message): string { 
+        public static function renderInline(MessageComponent $message): string { 
             $type = strtoupper($message->type);
             return <<<HTML
                 <div class="message-inline message-{$message->type}">
@@ -17,7 +17,7 @@
                 HTML;
         }
         
-        public static function renderBox(Message $message): string { 
+        public static function renderBox(MessageComponent $message): string { 
             $type = strtoupper($message->type);
             return <<<HTML
                 <div class="message-box message-{$message->type}">
@@ -29,7 +29,7 @@
 
         public MessageType $type;
         public string $content;
-        public function __construct(MessageType $type, string $content) {
+        public function __construct(string $content, MessageType $type = MessageType::Info) {
             $this->type = $type;
             $this->content = $content;
         } 

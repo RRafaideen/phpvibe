@@ -1,42 +1,72 @@
 <?php namespace Main\Feature\Auth;
 
-    use Main\UI\Message; 
+    use Form\FormGroup;
+    use Main\UI\MessageComponent; 
     use Main\UI\MessageType; 
-    use Main\UI\Template; 
-    use Main\UI\FormControl; 
+    use Main\UI\ViewComponent;
+    use Main\UI\FormControlComponent;
+
 
     class AuthView { 
-        public static function login(object $messages = new stdClass()): string {
-            $buttons = <<<HTML
-                <button type="submit">Connexion</button>
-                <a href="/register"><button type="button">S'enregistrer</button></a> 
-                HTML;
-            return Template::render((object) [
-                "title" => "Se connecter",
-                "body" => self::authForm("/login", $buttons, $messages)
-            ]);
+        public static function login(FormGroup $form): string {
+            $email = new FormControlComponent()
+                ->label("Email")
+                ->type("email")
+                ->name("email")
+                ->attribute("placeholder","Enter your email")
+                ->attribute("required", true)
+                ->value($form->getControl("email")->getValue())
+                ->errors($form->getControl("email")->getErrors());
+            $password = new FormControlComponent()
+                ->label("Mot de passe")
+                ->type("password")
+                ->name("password")
+                ->attribute("required", true)
+                ->value($form->getControl("password")->getValue())
+                ->errors($form->getControl("password")->getErrors());
+
+            return new ViewComponent()
+                ->title("Se connecter")
+                ->render(<<<HTML
+                    <form action="login" method="POST">
+                        {$email->render()}
+                        {$password->render()}
+                        <button type="submit">Connexion</button>
+                        <a href="register"><button type="button">S'enregistrer</button></a> 
+                    </form>
+                HTML);
         }
         
-        public static function register(object $messages = new stdClass()): string {
-            $buttons = <<<HTML
-                <button type="submit">S'enregister</button>
-                <a href="/login"><button type="button">Se connecter</button></a> 
-                HTML;
-            return  Template::render((object) [
-                "title" => "S'enregiter",
-                "body" => self::authForm("/register", $buttons, $messages)
-            ]);                
-        }
+        public static function register(FormGroup $form): string {
+            $honney = "<input type=\"hidden\" name=\"honney\" />";    
+            $csrf = "<input type=\"hidden\" name=\"csrf\" value=\"{$form->getControl("csrf")->getValue()}\" />";
+            $email = new FormControlComponent()
+                ->label("Email")
+                ->type("email")
+                ->name("email")
+                ->attribute("placeholder","Enter your email")
+                ->attribute("required", true)
+                ->value($form->getControl("email")->getValue())
+                ->errors($form->getControl("email")->getErrors());
+            $password = new FormControlComponent()
+                ->label("Mot de passe")
+                ->type("password")
+                ->name("password")
+                ->attribute("required", true)
+                ->value($form->getControl("password")->getValue())
+                ->errors($form->getControl("password")->getErrors());
 
-        private static function authForm(string $action, string $buttons, object $messages): string {
-            $email = new FormControl("Email", "email", "email", ["placeholder" => "Enter your email", "required" => true]);
-            $password = new FormControl("Mot de passe", "password", "password", ["required" => true]);
-            $email = FormControl::render($email);
-            $password = FormControl::render($password);
-
-            if(property_exists($messages, "email")) $email->messages = [new Message(MessageType::Error, "Erreur de saisie sur l'email.")];
-            if(property_exists($messages, "password")) $password->messages = [new Message(MessageType::Error, "Erreur de saisie sur le mot de passe.")];  
-
-            return "<form action=\"{$action}\" method=\"post\">{$email}{$password}{$buttons}</form>";
+            return new ViewComponent()
+                ->title("S'enregistrer")
+                ->render(<<<HTML
+                    <form action="register" method="POST">
+                        {$csrf}
+                        {$email->render()}
+                        {$password->render()}
+                        {$honney}        
+                        <button type="submit">S'enregistrer</button>
+                        <a href="login"><button type="button">Se connecter</button></a> 
+                    </form>
+                HTML);
         }
     }

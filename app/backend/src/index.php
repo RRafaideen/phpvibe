@@ -4,6 +4,9 @@
 
     use PDO;
     
+    use Form\FormBuilder;
+    use Data\Validator;
+
     use Network\HttpStatus;
     use Network\HttpMethod;
     use Network\HttpHandler;
@@ -19,6 +22,7 @@
     use Feature\Auth\AuthService;
     use Feature\Auth\Shared\JWT;
 
+    
     use function Network\{fail, respond, route, stack};
 
 
@@ -26,14 +30,10 @@
     applyMigrations($pdo);
 
     $db = new SQLDS($pdo);
-    $userRepository = new AuthRepository($db);
+    $authService = new AuthService(new AuthRepository($db), new AuthMailer());
     
-
-    /*
-    $authService = new AuthService(new AuthRespository($db), new AuthMailer());
-
-
     JWT::$SECRET = "be3f0504-9d14-4e57-aeeb-f4362ac4de31";
+
     HttpHandler::handle(
         route(HttpMethod::ANY, "/register", AuthController::register()),
         route(HttpMethod::ANY, "/login", AuthController::login()),
@@ -58,4 +58,3 @@
         }
         return respond($res);
     }
-    */

@@ -1,6 +1,7 @@
 <?php namespace Random;
     $CHARS = [];
     function generateChars(): void {
+        global $CHARS;
         if(count($CHARS) > 0) return;
         $NUMBER = [];
         $LOWER = [];
@@ -11,7 +12,8 @@
         $CHARS = array_merge($NUMBER, $LOWER, $UPPER);
     }
 
-    function gernerateRandomCode(int $size = 17): string { 
+    function gernerateRandomCode(int $size = 17): string {
+        global $CHARS;
         generateChars();
         $output = "";
         while(strlen($output) < $size) $output = $output . $CHARS[rand(0, count($CHARS) -1)];

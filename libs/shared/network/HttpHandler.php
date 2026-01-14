@@ -65,7 +65,7 @@
         if(preg_match("/\/$/", $pattern)) $pattern = substr($pattern, 0, strlen($pattern) -1);
         $fragments = explode('/', $pattern);
         return function(Request $req, Response $res) use ($method, $pattern, $handlers, $fragments): RespondType {
-            $pathname = (preg_match("/\/$/", $req->pathname)) 
+            $pathname = preg_match("/\/$/", $req->pathname)
                 ? substr($req->pathname, 0, strlen($req->pathname) -1)
                 : $req->pathname;
             $pathinfo = explode('/', $pathname);
@@ -102,6 +102,7 @@
     /* ---------- Internal ---------- */ 
 
     class Request { 
+        private ?string $_body = null;
         public readonly array $vault;
         public readonly array $queryString;
         public readonly string $pathname;
@@ -109,6 +110,7 @@
         public readonly HttpMethod $method;
         public readonly array $cookies;
         public array $params;
+        
         
         public function __construct(
             HttpHeaders $headers,
@@ -126,13 +128,14 @@
             $this->cookies = $cookies;
             $this->vault = [];
         }
-
+ 
         public function body(int $size = 2 * 1024 * 1024): string {
+            if($this->_body != null) return $this->_body;
             $lenght = intval($this->headers->get("Content-Length") ?? "0");
             if($lenght <= 0) return null;
             if($lenght > $size) throw new HttpException("Content to large", 213);
             $body = file_get_contents("php://input");
-            return is_string($body) ? $body : null;
+            return $this->_body = (is_string($body) ? $body : null);
         }
 
         public function json(int $size = 2 * 1024 * 1024) {

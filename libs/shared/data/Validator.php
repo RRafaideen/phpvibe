@@ -1,28 +1,27 @@
-<?php namespace Prelude; 
-
+<?php namespace Data; 
 
     class Validator { 
 
-        public static function isString(bool $optionnal = false) {
-            return function($value) {
-                if($optionnal && $value == null) return;
+        public static function isString(bool $optional = false) {
+            return function($value) use ($optional) {
+                if($optional && $value == null) return;
                 if(gettype($value) == "string") return;
                 return "Value should be string";
             };
         }
 
-        public static function matchWith(string $regexp, bool $optionnal = false) {
-            return function($value) { 
-                if($optionnal && $value == null) return;
+        public static function matchWith(string $regexp, bool $optional = false) {
+            return function($value) use ($regexp, $optional) {
+                if($optional && $value == null) return;
                 if(preg_match($regexp, $value)) return;
                 return "Value doesn't match";
             };   
         }
         
-        public static function isEmail(bool $optionnal = false) {
-            return function($value) {
-                $regexp = "/^((?!\.)[\w\-_.]*[^.])(@\w+)(\.\w+(\.\w+)?[^.\W])$/gm";
-                $message = self::matchWith($optionnal)($regexp, $value);
+        public static function isEmail(bool $optional = false) {
+            return function($value) use ($optional) {
+                $regexp = "/^((?!\.)[\w\-_.]*[^.])(@\w+)(\.\w+(\.\w+)?[^.\W])$/m";
+                $message = self::matchWith($regexp, $optional)($value);
                 if($message != null) return "Email not valid";
             };
         }
@@ -44,5 +43,4 @@
             return count($errors) ? ((object) $errors) : null;
         }
     }
-
 

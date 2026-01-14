@@ -57,7 +57,6 @@
             $user = $this->getUserById($profile->uid);
             $user->firstname = $profile->firstname;
             $user->lastname = $profile->lastname;
-            $user->role = $profile->role ?? UserRole::ROLE_USER;
             $this->db->storeUser($user);
         }
         
@@ -70,7 +69,7 @@
             $profile = (object) [
                 "uid" => $user->uid, "firstname" => $user->firstname, 
                 "lastname" => $user->lastname, "email" => $user->email, 
-                "createdAt" => $user->createdAt, "role" => $user->role ];
+                "createdAt" => $user->createdAt ];
             return $profile;
         }
 
